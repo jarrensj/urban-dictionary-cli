@@ -11,7 +11,7 @@
   "author": "Jarren San Jose",
   "license": "ISC",
   "dependencies": {
-    "commander": "^2.12.2",
+    "commander": "^2.17.1",
     "inquirer": "^4.0.1"
   }
 }

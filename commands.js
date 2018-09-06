@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 const program = require('commander');
+const http = require('http');
 
 const {
-  hello,
+  urbanDictionary,
   goodbye
 } = require('./index');
 
@@ -11,10 +12,44 @@ program
   .description('kwaji cli')
 
 program
-  .command('hello <turtleName>')
+  .command('urbanDictionary <word>')
   .alias('a')
-  .description('turtle name')
-  .action(turtleName => hello(turtleName));
+  .description('word to look up in urban dictionary')
+  .action(function(word){
+    http.get('http://api.urbandictionary.com/v0/define?term={' + word + '}', (res) => {
+  const { statusCode } = res;
+  const contentType = res.headers['content-type'];
+
+  let error;
+  if (statusCode !== 200) {
+    error = new Error('Request Failed.\n' +
+                      `Status Code: ${statusCode}`);
+  } else if (!/^application\/json/.test(contentType)) {
+    error = new Error('Invalid content-type.\n' +
+                      `Expected application/json but received ${contentType}`);
+  }
+  if (error) {
+    console.error(error.message);
+    // consume response data to free up memory
+    res.resume();
+    return;
+  }
+
+  res.setEncoding('utf8');
+  let rawData = '';
+  res.on('data', (chunk) => { rawData += chunk; });
+  res.on('end', () => {
+    try {
+      const parsedData = JSON.parse(rawData);
+      console.log(parsedData);
+    } catch (e) {
+      console.error(e.message);
+    }
+  });
+}).on('error', (e) => {
+  console.error(`Got error: ${e.message}`);
+});
+  });
 
 
 program
